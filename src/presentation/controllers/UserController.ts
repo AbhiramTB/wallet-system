@@ -15,11 +15,11 @@ import { HttpStatus } from "../../constants/httpStatus.js";
 @injectable()
 export class UserController {
   constructor(
-    @inject(DI_TOKENS.SIGN_UP_USE_CASE)
+    @inject(DI_TOKENS.signUpUseCase)
     private readonly signUpUseCase: ISignUpUseCase,
-    @inject(DI_TOKENS.SIGN_IN_USE_CASE)
+    @inject(DI_TOKENS.signInUseCase)
     private readonly signInUseCase: ISignInUseCase,
-    @inject(DI_TOKENS.GET_ME_USE_CASE)
+    @inject(DI_TOKENS.getMeUseCase)
     private readonly getMeUseCase: IGetMeUseCase,
   ) {}
 
