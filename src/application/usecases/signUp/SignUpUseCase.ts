@@ -4,10 +4,10 @@ import { DI_TOKENS } from "../../../container/tokens.js";
 import type { User } from "../../../domain/entities/User.js";
 import type { IUserRepository } from "../../../domain/repositories/IUserRepository.js";
 import type { IPasswordService } from "../../interfaces/IPasswordService.js";
-import { MESSAGES } from "../../../constants/index.js";
 import type { ISignUpUseCase } from "./ISignUpUseCase.js";
 import type { SignUpDto } from "./SignUpDto.js";
 import type { ITokenService } from "../../interfaces/ITokenService.js";
+import { MESSAGES } from "../../../constants/messages.js";
 
 @injectable()
 export class SignUpUseCase implements ISignUpUseCase {

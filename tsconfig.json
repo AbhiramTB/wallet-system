@@ -11,7 +11,7 @@
     "target": "esnext",
     "experimentalDecorators": true,
     "emitDecoratorMetadata": true,
-    "types": ["node"],
+    "types": ["node", "bcrypt", "jsonwebtoken"],
     // For nodejs:
     // "lib": ["esnext"],
     // "types": ["node"],

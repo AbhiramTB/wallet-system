@@ -1,6 +1,7 @@
 import type { NextFunction, Request, Response } from "express";
+import { HttpStatus } from "../../constants/httpStatus.js";
+import { MESSAGES } from "../../constants/messages.js";
 
-import { HttpStatus, MESSAGES } from "../../constants/index.js";
 
 export const errorMiddleware = (
   err: unknown,

@@ -1,0 +1,7 @@
+export const DI_TOKENS = {
+  USER_REPOSITORY: Symbol.for("USER_REPOSITORY"),
+  PASSWORD_SERVICE: Symbol.for("PASSWORD_SERVICE"),
+  TOKEN_SERVICE: Symbol.for("TOKEN_SERVICE"),
+  SIGN_UP_USE_CASE: Symbol.for("SIGN_UP_USE_CASE"),
+  SIGN_IN_USE_CASE: Symbol.for("SIGN_IN_USE_CASE"),
+} as const;
