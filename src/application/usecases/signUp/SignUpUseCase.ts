@@ -4,8 +4,10 @@ import { DI_TOKENS } from "../../../container/tokens.js";
 import type { User } from "../../../domain/entities/User.js";
 import type { IUserRepository } from "../../../domain/repositories/IUserRepository.js";
 import type { IPasswordService } from "../../interfaces/IPasswordService.js";
+import { MESSAGES } from "../../../constants/index.js";
 import type { ISignUpUseCase } from "./ISignUpUseCase.js";
 import type { SignUpDto } from "./SignUpDto.js";
+import type { ITokenService } from "../../interfaces/ITokenService.js";
 
 @injectable()
 export class SignUpUseCase implements ISignUpUseCase {
@@ -21,7 +23,7 @@ export class SignUpUseCase implements ISignUpUseCase {
     const existingUser = await this.userRepository.findByEmail(email);
 
     if (existingUser) {
-      throw new Error("An account with this email already exists.");
+      throw new Error(MESSAGES.EMAIL_ALREADY_IN_USE);
     }
 
     const password = await this.passwordService.hash(dto.password);
