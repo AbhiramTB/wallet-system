@@ -1,21 +1,17 @@
-import { env } from '../../utils/env.js'
-import mongoose from 'mongoose'
+import mongoose from "mongoose";
+import { env } from "../../utils/env.js";
 
 
-const mongoDburl =env.DB_URL
-  
-async function dbConnect(){
-    try {
-        
-       const crr=await mongoose.connect(mongoDburl+"")
 
-       console.log(crr.connection.host);
-       
-    } catch (error) {
+async function dbConnect(): Promise<void> {
+  try {
+    const connection = await mongoose.connect(env.DB_URL);
 
-        console.log(error);
-        
-    }
+    console.log(connection.connection.host);
+  } catch (error) {
+    console.error("Database connection failed:", error);
+    throw error;
+  }
 }
 
-export default dbConnect
+export default dbConnect;

@@ -1,4 +1,6 @@
 
+import "reflect-metadata";
+
 import app from "./app.js";
 import dbConnect from "./infrastructure/config/db.js";
 import { env } from "./utils/env.js";
