@@ -11,4 +11,8 @@ if (!process.env.DB_URL || process.env.DB_URL.trim() === "") {
 export const env = {
   DB_URL: process.env.DB_URL,
   PORT: process.env.PORT || 3000,
+  ACCESS_TOKEN_SECRET: process.env.ACCESS_TOKEN_SECRET || process.env.JWT_SECRET || "default_access_token_secret",
+  REFRESH_TOKEN_SECRET: process.env.REFRESH_TOKEN_SECRET || "default_refresh_token_secret",
+  JWT_SECRET: process.env.JWT_SECRET || process.env.ACCESS_TOKEN_SECRET || "default_jwt_secret_key",
+  JWT_EXPIRES_IN: process.env.JWT_EXPIRES_IN || "1d",
 };
