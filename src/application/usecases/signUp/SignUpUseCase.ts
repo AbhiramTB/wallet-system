@@ -6,7 +6,7 @@ import type { IUserRepository } from "../../../domain/repositories/IUserReposito
 import type { IPasswordService } from "../../interfaces/IPasswordService.js";
 import type { ISignUpUseCase } from "./ISignUpUseCase.js";
 import type { SignUpDto } from "./SignUpDto.js";
-import type { ITokenService } from "../../interfaces/ITokenService.js";
+import type { ICreateWalletUseCase } from "../createWallet/ICreateWalletUseCase.js";
 import { MESSAGES } from "../../../constants/messages.js";
 
 @injectable()
@@ -16,6 +16,8 @@ export class SignUpUseCase implements ISignUpUseCase {
     private readonly userRepository: IUserRepository,
     @inject(DI_TOKENS.PASSWORD_SERVICE)
     private readonly passwordService: IPasswordService,
+    @inject(DI_TOKENS.CREATE_WALLET_USE_CASE)
+    private readonly createWalletUseCase: ICreateWalletUseCase,
   ) {}
 
   async execute(dto: SignUpDto): Promise<User> {
@@ -28,11 +30,17 @@ export class SignUpUseCase implements ISignUpUseCase {
 
     const password = await this.passwordService.hash(dto.password);
 
-    return this.userRepository.save({
+    const user = await this.userRepository.save({
       username: dto.username.trim(),
       email,
       password,
     });
+
+    await this.createWalletUseCase.execute({
+      userId: user.id,
+    });
+
+    return user;
   }
   
 }
