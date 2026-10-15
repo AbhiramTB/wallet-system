@@ -9,7 +9,7 @@ import type { CreateWalletDto } from "./CreateWalletDto.js";
 @injectable()
 export class CreateWalletUseCase implements ICreateWalletUseCase {
   constructor(
-    @inject(DI_TOKENS.WALLET_REPOSITORY)
+    @inject(DI_TOKENS.walletRepository)
     private readonly walletRepository: IWalletRepository,
   ) {}
 

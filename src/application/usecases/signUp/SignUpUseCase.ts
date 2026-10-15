@@ -12,11 +12,11 @@ import { MESSAGES } from "../../../constants/messages.js";
 @injectable()
 export class SignUpUseCase implements ISignUpUseCase {
   constructor(
-    @inject(DI_TOKENS.USER_REPOSITORY)
+    @inject(DI_TOKENS.userRepository)
     private readonly userRepository: IUserRepository,
-    @inject(DI_TOKENS.PASSWORD_SERVICE)
+    @inject(DI_TOKENS.passwordService)
     private readonly passwordService: IPasswordService,
-    @inject(DI_TOKENS.CREATE_WALLET_USE_CASE)
+    @inject(DI_TOKENS.createWalletUseCase)
     private readonly createWalletUseCase: ICreateWalletUseCase,
   ) {}
 

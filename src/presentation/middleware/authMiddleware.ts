@@ -22,7 +22,7 @@ export const authMiddleware = (
     throw new Error(MESSAGES.NO_TOKEN_PROVIDED);
   }
 
-  const tokenService = container.resolve<ITokenService>(DI_TOKENS.TOKEN_SERVICE);
+  const tokenService = container.resolve<ITokenService>(DI_TOKENS.tokenService);
   const decoded = tokenService.verifyAccessToken(token);
 
   if (!decoded) {
