@@ -10,7 +10,7 @@ import type { GetMeResponseDto } from "./GetMeDto.js";
 @injectable()
 export class GetMeUseCase implements IGetMeUseCase {
   constructor(
-    @inject(DI_TOKENS.USER_REPOSITORY)
+    @inject(DI_TOKENS.userRepository)
     private readonly userRepository: IUserRepository,
   ) {}
 
