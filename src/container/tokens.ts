@@ -4,4 +4,5 @@ export const DI_TOKENS = {
   TOKEN_SERVICE: Symbol.for("TOKEN_SERVICE"),
   SIGN_UP_USE_CASE: Symbol.for("SIGN_UP_USE_CASE"),
   SIGN_IN_USE_CASE: Symbol.for("SIGN_IN_USE_CASE"),
+  GET_ME_USE_CASE: Symbol.for("GET_ME_USE_CASE"),
 } as const;

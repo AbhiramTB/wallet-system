@@ -5,4 +5,7 @@ export const MESSAGES = {
   EMAIL_ALREADY_IN_USE: "An account with this email already exists.",
   INVALID_CREDENTIALS: "Invalid email or password.",
   INTERNAL_SERVER_ERROR: "Internal Server Error",
+  NO_TOKEN_PROVIDED: "Authorization token is required.",
+  INVALID_TOKEN: "Invalid or expired token.",
+  USER_NOT_FOUND: "User not found.",
 } as const;

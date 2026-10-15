@@ -6,6 +6,7 @@ import type { ISignInUseCase } from "../../application/usecases/signIn/ISignInUs
 import type { SignInDto } from "../../application/usecases/signIn/SignInDto.js";
 import type { ISignUpUseCase } from "../../application/usecases/signUp/ISignUpUseCase.js";
 import type { SignUpDto } from "../../application/usecases/signUp/SignUpDto.js";
+import type { IGetMeUseCase } from "../../application/usecases/getMe/IGetMeUseCase.js";
 import { sanitizeUser } from "../../utils/sanitizeUser.js";
 
 import { MESSAGES } from "../../constants/messages.js";
@@ -18,6 +19,8 @@ export class UserController {
     private readonly signUpUseCase: ISignUpUseCase,
     @inject(DI_TOKENS.SIGN_IN_USE_CASE)
     private readonly signInUseCase: ISignInUseCase,
+    @inject(DI_TOKENS.GET_ME_USE_CASE)
+    private readonly getMeUseCase: IGetMeUseCase,
   ) {}
 
   signUp = async (request: Request, response: Response): Promise<void> => {
@@ -66,7 +69,16 @@ export class UserController {
 
     response.status(HttpStatus.OK).json(result);
   };
-  
 
+  getMe = async (_request: Request, response: Response): Promise<void> => {
+    const userId = response.locals.userId as string | undefined;
 
+    if (!userId) {
+      throw new Error(MESSAGES.USER_NOT_FOUND);
+    }
+
+    const result = await this.getMeUseCase.execute(userId);
+
+    response.status(HttpStatus.OK).json(result);
+  };
 }
