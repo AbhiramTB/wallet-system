@@ -8,4 +8,6 @@ export const MESSAGES = {
   NO_TOKEN_PROVIDED: "Authorization token is required.",
   INVALID_TOKEN: "Invalid or expired token.",
   USER_NOT_FOUND: "User not found.",
+  WALLET_NOT_FOUND: "Wallet not found.",
+  CURRENCY_NOT_SUPPORTED: "Requested currency is not supported.",
 } as const;

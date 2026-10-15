@@ -1,5 +1,6 @@
 export const DI_TOKENS = {
   userRepository: "IUserRepository",
+  walletRepository: "IWalletRepository",
   passwordService: "IPasswordService",
   tokenService: "ITokenService",
   cacheService: "ICacheService",
@@ -7,9 +8,12 @@ export const DI_TOKENS = {
   signUpUseCase: "ISignUpUseCase",
   signInUseCase: "ISignInUseCase",
   getMeUseCase: "IGetMeUseCase",
+  createWalletUseCase: "ICreateWalletUseCase",
+  getBalanceUseCase: "IGetBalanceUseCase",
   updateExchangeRatesUseCase: "IUpdateExchangeRatesUseCase",
 
   USER_REPOSITORY: "IUserRepository",
+  WALLET_REPOSITORY: "IWalletRepository",
   PASSWORD_SERVICE: "IPasswordService",
   TOKEN_SERVICE: "ITokenService",
   CACHE_SERVICE: "ICacheService",
@@ -17,5 +21,7 @@ export const DI_TOKENS = {
   SIGN_UP_USE_CASE: "ISignUpUseCase",
   SIGN_IN_USE_CASE: "ISignInUseCase",
   GET_ME_USE_CASE: "IGetMeUseCase",
+  CREATE_WALLET_USE_CASE: "ICreateWalletUseCase",
+  GET_BALANCE_USE_CASE: "IGetBalanceUseCase",
   UPDATE_EXCHANGE_RATES_USE_CASE: "IUpdateExchangeRatesUseCase",
 } as const;

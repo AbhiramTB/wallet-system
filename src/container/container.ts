@@ -12,6 +12,12 @@ import type { IUpdateExchangeRatesUseCase } from "../application/usecases/update
 import { UpdateExchangeRatesUseCase } from "../application/usecases/updateExchangeRates/UpdateExchangeRatesUseCase.js";
 import type { IUserRepository } from "../domain/repositories/IUserRepository.js";
 import { UserRepository } from "../infrastructure/database/repositories/UserRepository.js";
+import type { IWalletRepository } from "../domain/repositories/IWalletRepository.js";
+import { WalletRepository } from "../infrastructure/database/repositories/WalletRepository.js";
+import type { ICreateWalletUseCase } from "../application/usecases/createWallet/ICreateWalletUseCase.js";
+import { CreateWalletUseCase } from "../application/usecases/createWallet/CreateWalletUseCase.js";
+import type { IGetBalanceUseCase } from "../application/usecases/getBalance/IGetBalanceUseCase.js";
+import { GetBalanceUseCase } from "../application/usecases/getBalance/GetBalanceUseCase.js";
 import type { ICacheService } from "../application/interfaces/ICacheService.js";
 import type { IExchangeRateService } from "../application/interfaces/IExchangeRateService.js";
 import { ExchangeRateService } from "../infrastructure/services/ExchangeRateService.js";
@@ -22,6 +28,7 @@ import { DI_TOKENS } from "./tokens.js";
 
 
 container.registerSingleton<IUserRepository>(DI_TOKENS.userRepository, UserRepository);
+container.registerSingleton<IWalletRepository>(DI_TOKENS.walletRepository, WalletRepository);
 container.registerSingleton<IPasswordService>(DI_TOKENS.passwordService, PasswordService);
 container.registerSingleton<ITokenService>(DI_TOKENS.tokenService, TokenService);
 container.registerSingleton<ICacheService>(DI_TOKENS.cacheService, RedisCacheService);
@@ -29,6 +36,8 @@ container.registerSingleton<IExchangeRateService>(DI_TOKENS.exchangeRateService,
 container.registerSingleton<ISignUpUseCase>(DI_TOKENS.signUpUseCase, SignUpUseCase);
 container.registerSingleton<ISignInUseCase>(DI_TOKENS.signInUseCase, SignInUseCase);
 container.registerSingleton<IGetMeUseCase>(DI_TOKENS.getMeUseCase, GetMeUseCase);
+container.registerSingleton<ICreateWalletUseCase>(DI_TOKENS.createWalletUseCase, CreateWalletUseCase);
+container.registerSingleton<IGetBalanceUseCase>(DI_TOKENS.getBalanceUseCase, GetBalanceUseCase);
 container.registerSingleton<IUpdateExchangeRatesUseCase>(
   DI_TOKENS.updateExchangeRatesUseCase,
   UpdateExchangeRatesUseCase,
