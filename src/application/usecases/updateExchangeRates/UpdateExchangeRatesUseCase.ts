@@ -2,10 +2,10 @@ import { inject, injectable } from "tsyringe";
 
 import { DI_TOKENS } from "../../../container/tokens.js";
 import { env } from "../../../utils/env.js";
+import { EXCHANGE_RATES } from "../../../constants/exchangeRates.js";
 import type { ICacheService } from "../../interfaces/ICacheService.js";
 import type { IExchangeRateService } from "../../interfaces/IExchangeRateService.js";
 import type { IUpdateExchangeRatesUseCase } from "./IUpdateExchangeRatesUseCase.js";
-import type { UpdateExchangeRatesDto } from "./UpdateExchangeRatesDto.js";
 
 @injectable()
 export class UpdateExchangeRatesUseCase implements IUpdateExchangeRatesUseCase {
@@ -17,24 +17,15 @@ export class UpdateExchangeRatesUseCase implements IUpdateExchangeRatesUseCase {
   ) {}
 
   async execute(
-    dtoOrBaseCurrency?: UpdateExchangeRatesDto | string,
   ): Promise<Record<string, number>> {
-    const baseCurrency = (
-      typeof dtoOrBaseCurrency === "string"
-        ? dtoOrBaseCurrency
-        : dtoOrBaseCurrency?.baseCurrency || env.DEFAULT_BASE_CURRENCY
-    )
-      .trim()
-      .toUpperCase();
 
-    const ttlSeconds =
-      typeof dtoOrBaseCurrency === "object" && dtoOrBaseCurrency?.ttlSeconds !== undefined
-        ? dtoOrBaseCurrency.ttlSeconds
-        : env.DEFAULT_TTL_SECONDS;
+    const baseCurrency =  env.DEFAULT_BASE_CURRENCY;
+
+    const ttlSeconds = env.CURRENCY_CACHE_TTL;
 
     const rates = await this.exchangeRateService.getRates(baseCurrency);
 
-    const cacheKey = `exchange_rates:${baseCurrency}`;
+    const cacheKey = `${EXCHANGE_RATES.CACHE_KEY}:${baseCurrency}`;
     await this.cacheService.set(cacheKey, JSON.stringify(rates), ttlSeconds);
 
     return rates;

@@ -16,6 +16,8 @@ import type { IWalletRepository } from "../domain/repositories/IWalletRepository
 import { WalletRepository } from "../infrastructure/database/repositories/WalletRepository.js";
 import type { ICreateWalletUseCase } from "../application/usecases/createWallet/ICreateWalletUseCase.js";
 import { CreateWalletUseCase } from "../application/usecases/createWallet/CreateWalletUseCase.js";
+import type { IGetBalanceUseCase } from "../application/usecases/getBalance/IGetBalanceUseCase.js";
+import { GetBalanceUseCase } from "../application/usecases/getBalance/GetBalanceUseCase.js";
 import type { ICacheService } from "../application/interfaces/ICacheService.js";
 import type { IExchangeRateService } from "../application/interfaces/IExchangeRateService.js";
 import { ExchangeRateService } from "../infrastructure/services/ExchangeRateService.js";
@@ -35,6 +37,7 @@ container.registerSingleton<ISignUpUseCase>(DI_TOKENS.signUpUseCase, SignUpUseCa
 container.registerSingleton<ISignInUseCase>(DI_TOKENS.signInUseCase, SignInUseCase);
 container.registerSingleton<IGetMeUseCase>(DI_TOKENS.getMeUseCase, GetMeUseCase);
 container.registerSingleton<ICreateWalletUseCase>(DI_TOKENS.createWalletUseCase, CreateWalletUseCase);
+container.registerSingleton<IGetBalanceUseCase>(DI_TOKENS.getBalanceUseCase, GetBalanceUseCase);
 container.registerSingleton<IUpdateExchangeRatesUseCase>(
   DI_TOKENS.updateExchangeRatesUseCase,
   UpdateExchangeRatesUseCase,

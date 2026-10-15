@@ -9,9 +9,9 @@ export const DI_TOKENS = {
   signInUseCase: "ISignInUseCase",
   getMeUseCase: "IGetMeUseCase",
   createWalletUseCase: "ICreateWalletUseCase",
+  getBalanceUseCase: "IGetBalanceUseCase",
   updateExchangeRatesUseCase: "IUpdateExchangeRatesUseCase",
 
-  // Uppercase aliases for backward compatibility
   USER_REPOSITORY: "IUserRepository",
   WALLET_REPOSITORY: "IWalletRepository",
   PASSWORD_SERVICE: "IPasswordService",
@@ -22,5 +22,6 @@ export const DI_TOKENS = {
   SIGN_IN_USE_CASE: "ISignInUseCase",
   GET_ME_USE_CASE: "IGetMeUseCase",
   CREATE_WALLET_USE_CASE: "ICreateWalletUseCase",
+  GET_BALANCE_USE_CASE: "IGetBalanceUseCase",
   UPDATE_EXCHANGE_RATES_USE_CASE: "IUpdateExchangeRatesUseCase",
 } as const;

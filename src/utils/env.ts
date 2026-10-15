@@ -19,5 +19,6 @@ export const env = {
   REDIS_PORT: process.env.REDIS_PORT || 6379,
   EXCHANGE_RATE_API_URL: process.env.EXCHANGE_RATE_API_URL || "https://open.er-api.com/v6/latest",
   DEFAULT_BASE_CURRENCY: process.env.DEFAULT_BASE_CURRENCY || "INR",
-  DEFAULT_TTL_SECONDS: Number(process.env.DEFAULT_TTL_SECONDS) || 86400,
+  CURRENCY_CACHE_TTL: Number(process.env.CURRENCY_CACHE_TTL) || 86400,
 };
+

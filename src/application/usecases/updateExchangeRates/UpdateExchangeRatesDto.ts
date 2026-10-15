@@ -1,4 +1,4 @@
-export interface UpdateExchangeRatesDto {
-  baseCurrency?: string | undefined;
-  ttlSeconds?: number | undefined;
-}
+// export interface UpdateExchangeRatesDto {
+//   baseCurrency?: string | undefined;
+//   ttlSeconds?: number | undefined;
+// }
