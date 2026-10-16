@@ -8,7 +8,7 @@ import { generateTransactionIdentifiers } from "../../../utils/transactionIdenti
 import type { IWalletRepository } from "../../../domain/repositories/IWalletRepository.js";
 import type { ITransactionRepository } from "../../../domain/repositories/ITransactionRepository.js";
 import type { IGetExchangeRatesUseCase } from "../getExchangeRates/IGetExchangeRatesUseCase.js";
-import type { ICheckFraudUseCase } from "../checkFraud/ICheckFraudUseCase.js";
+import type { IAddFraudUseCase } from "../addFraud/IAddFraudUseCase.js";
 import type { IValidateFraudUseCase } from "../validateFraud/IValidateFraudUseCase.js";
 import type { IDepositUseCase } from "./IDepositUseCase.js";
 import type { DepositDto, DepositResponseDto } from "./DepositDto.js";
@@ -22,8 +22,8 @@ export class DepositUseCase implements IDepositUseCase {
     private readonly transactionRepository: ITransactionRepository,
     @inject(DI_TOKENS.getExchangeRatesUseCase)
     private readonly getExchangeRatesUseCase: IGetExchangeRatesUseCase,
-    @inject(DI_TOKENS.checkFraudUseCase)
-    private readonly checkFraudUseCase: ICheckFraudUseCase,
+    @inject(DI_TOKENS.addFraudUseCase)
+    private readonly addFraudUseCase: IAddFraudUseCase,
     @inject(DI_TOKENS.validateFraudUseCase)
     private readonly validateFraudUseCase: IValidateFraudUseCase,
   ) {}
@@ -39,9 +39,8 @@ export class DepositUseCase implements IDepositUseCase {
 
     const depositCurrency = dto.currency.trim().toUpperCase();
 
-   // check if user already made 3 high-value deposit attempts within 5 minutes
-    const initialFraudCheck = await this.checkFraudUseCase.checkIfAlreadyFlagged(dto.userId);
-    this.validateFraudUseCase.execute({ fraudCheckResult: initialFraudCheck });
+    // Check if user is already flagged for fraud
+    await this.validateFraudUseCase.execute({ userId: dto.userId });
 
     // Idempotency check: if already exists return existing transaction & wallet
     if (dto.idempotencyKey) {
@@ -80,12 +79,12 @@ export class DepositUseCase implements IDepositUseCase {
       convertedAmount = Number((dto.amount * rate).toFixed(2));
     }
 
-     //fraud check 
-    const fraudCheckResult = await this.checkFraudUseCase.execute({
+    // Record / check high-value deposit fraud attempt
+    const fraudCheckResult = await this.addFraudUseCase.execute({
       userId: dto.userId,
       amountInBaseCurrency: convertedAmount,
     });
-    this.validateFraudUseCase.execute({ fraudCheckResult });
+    await this.validateFraudUseCase.execute({ fraudCheckResult });
 
     // Step 6: Check daily transaction count
     const startOfDay = new Date();
