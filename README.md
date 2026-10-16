@@ -614,7 +614,3 @@ CURRENCY_CACHE_TTL=86400
 | `npm test` | Placeholder for test suite execution |
 
 ---
-
-## 🛡 License
-
-This project is licensed under the **ISC License**.
