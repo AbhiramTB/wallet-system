@@ -1,5 +1,10 @@
-import type { CheckFraudResultDto } from "../checkFraud/CheckFraudDto.js";
+export interface FraudCheckResultDto {
+  isFraud: boolean;
+  attemptsCount?: number | undefined;
+  reason?: string | undefined;
+}
 
 export interface ValidateFraudInputDto {
-  fraudCheckResult: CheckFraudResultDto;
+  userId?: string | undefined;
+  fraudCheckResult?: FraudCheckResultDto | undefined;
 }

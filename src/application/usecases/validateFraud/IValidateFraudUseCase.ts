@@ -1,5 +1,6 @@
-import type { ValidateFraudInputDto } from "./ValidateFraudDto.js";
+import type { FraudCheckResultDto, ValidateFraudInputDto } from "./ValidateFraudDto.js";
 
 export interface IValidateFraudUseCase {
-  execute(dto: ValidateFraudInputDto): void;
+  checkIfAlreadyFlagged(userId: string): Promise<FraudCheckResultDto>;
+  execute(dto: ValidateFraudInputDto): Promise<void>;
 }
