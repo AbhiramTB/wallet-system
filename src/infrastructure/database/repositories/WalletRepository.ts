@@ -45,4 +45,23 @@ export class WalletRepository implements IWalletRepository {
 
     return document ? toWallet(document) : null;
   }
+
+  async updateBalance(walletId: string, amount: number): Promise<Wallet | null> {
+    if (!isValidObjectId(walletId)) {
+      return null;
+    }
+
+    const filter: Record<string, unknown> = { _id: walletId };
+    if (amount < 0) {
+      filter.balance = { $gte: Math.abs(amount) };
+    }
+
+    const document = await WalletModel.findOneAndUpdate(
+      filter,
+      { $inc: { balance: amount } },
+      { new: true },
+    ).exec();
+
+    return document ? toWallet(document) : null;
+  }
 }

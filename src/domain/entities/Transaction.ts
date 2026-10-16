@@ -21,14 +21,14 @@ export interface ITransaction {
   type: TransactionType;
   status: TransactionStatus;
 
-  fromWalletId?: string;
-  toWalletId?: string;
+  fromWalletId?: string | undefined;
+  toWalletId?: string | undefined;
 
   amount: number;
   currency: string;
 
-  originalAmount?: Money;
-  exchangeRate?: number;
+  originalAmount?: Money | undefined;
+  exchangeRate?: number | undefined;
 
   createdAt: Date;
   updatedAt: Date;
@@ -40,11 +40,11 @@ export interface CreateTransactionInput {
   transactionId: string;
   idempotencyKey: string;
   type: TransactionType;
-  status?: TransactionStatus;
-  fromWalletId?: string;
-  toWalletId?: string;
+  status?: TransactionStatus | undefined;
+  fromWalletId?: string | undefined;
+  toWalletId?: string | undefined;
   amount: number;
   currency: string;
-  originalAmount?: Money;
-  exchangeRate?: number;
+  originalAmount?: Money | undefined;
+  exchangeRate?: number | undefined;
 }
