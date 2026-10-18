@@ -1,4 +1,4 @@
-import { isValidObjectId } from "mongoose";
+import { isValidObjectId, type ClientSession } from "mongoose";
 import { injectable } from "tsyringe";
 
 import type { CreateWalletInput, Wallet } from "../../../domain/entities/Wallet.js";
@@ -20,6 +20,8 @@ function toWallet(document: WalletDocument): Wallet {
 
 @injectable()
 export class WalletRepository implements IWalletRepository {
+  constructor(private readonly session: ClientSession | undefined = undefined ) {}
+
   async save(wallet: CreateWalletInput): Promise<Wallet> {
     const document = await WalletModel.create(wallet);
 
@@ -59,7 +61,11 @@ export class WalletRepository implements IWalletRepository {
     const document = await WalletModel.findOneAndUpdate(
       filter,
       { $inc: { balance: amount } },
-      { new: true },
+       {
+    new: true,
+    ...(this.session && { session: this.session }),
+  },
+
     ).exec();
 
     return document ? toWallet(document) : null;

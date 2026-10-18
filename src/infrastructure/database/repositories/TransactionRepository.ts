@@ -1,4 +1,4 @@
-import mongoose from "mongoose";
+import mongoose, { type ClientSession } from "mongoose";
 import { injectable } from "tsyringe";
 
 import type {
@@ -35,27 +35,32 @@ function toTransaction(doc: TransactionDocument): Transaction {
 
 @injectable()
 export class TransactionRepository implements ITransactionRepository {
-  async save(transaction: CreateTransactionInput): Promise<Transaction> {
-    
-    const document = await TransactionModel.create({
-      transactionId: transaction.transactionId,
-      idempotencyKey: transaction.idempotencyKey,
-      type: transaction.type,
-      status: transaction.status ?? "pending",
-      fromWalletId: transaction.fromWalletId
-        ? new mongoose.Types.ObjectId(transaction.fromWalletId)
-        : null,
-      toWalletId: transaction.toWalletId
-        ? new mongoose.Types.ObjectId(transaction.toWalletId)
-        : null,
-      amount: transaction.amount,
-      currency: transaction.currency,
-      originalAmount: transaction.originalAmount ?? null,
-      exchangeRate: transaction.exchangeRate ?? null,
-    });
+    constructor(private readonly session: ClientSession | undefined = undefined ) {}
+  
+ async save(transaction: CreateTransactionInput): Promise<Transaction> {
+  const document = new TransactionModel({
+    transactionId: transaction.transactionId,
+    idempotencyKey: transaction.idempotencyKey,
+    type: transaction.type,
+    status: transaction.status ?? "pending",
+    fromWalletId: transaction.fromWalletId
+      ? new mongoose.Types.ObjectId(transaction.fromWalletId)
+      : null,
+    toWalletId: transaction.toWalletId
+      ? new mongoose.Types.ObjectId(transaction.toWalletId)
+      : null,
+    amount: transaction.amount,
+    currency: transaction.currency,
+    originalAmount: transaction.originalAmount ?? null,
+    exchangeRate: transaction.exchangeRate ?? null,
+  });
 
-    return toTransaction(document);
-  }
+  await document.save(
+    this.session ? { session: this.session } : undefined,
+  );
+
+  return toTransaction(document);
+}
 
   async findByTransactionId(transactionId: string): Promise<Transaction | null> {
     const document = await TransactionModel.findOne({ transactionId }).exec();
