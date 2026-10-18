@@ -41,6 +41,11 @@ import { PasswordService } from "../infrastructure/services/PasswordService.js";
 import { RedisCacheService } from "../infrastructure/services/RedisCacheService.js";
 import { TokenService } from "../infrastructure/services/TokenService.js";
 import { DI_TOKENS } from "./tokens.js";
+import { MongTransactionManager } from "../infrastructure/database/MongoTransactionManager.js";
+import type { ITransactionManager } from "../application/interfaces/ITransactionManager.js";
+
+
+container.registerSingleton<ITransactionManager>(DI_TOKENS.transactionManager, MongTransactionManager);
 
 
 container.registerSingleton<IUserRepository>(DI_TOKENS.userRepository, UserRepository);
