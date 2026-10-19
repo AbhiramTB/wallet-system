@@ -1,4 +1,4 @@
-import { isValidObjectId } from "mongoose";
+import { isValidObjectId, type ClientSession } from "mongoose";
 import { injectable } from "tsyringe";
 
 import type { CreateWalletInput, Wallet } from "../../../domain/entities/Wallet.js";
@@ -20,8 +20,11 @@ function toWallet(document: WalletDocument): Wallet {
 
 @injectable()
 export class WalletRepository implements IWalletRepository {
+  constructor(private readonly session: ClientSession | undefined = undefined) {}
+
   async save(wallet: CreateWalletInput): Promise<Wallet> {
-    const document = await WalletModel.create(wallet);
+    const document = new WalletModel(wallet);
+    await document.save(this.session ? { session: this.session } : undefined);
 
     return toWallet(document);
   }
@@ -31,7 +34,11 @@ export class WalletRepository implements IWalletRepository {
       return null;
     }
 
-    const document = await WalletModel.findById(id).exec();
+    const query = WalletModel.findById(id);
+    if (this.session) {
+      query.session(this.session);
+    }
+    const document = await query.exec();
 
     return document ? toWallet(document) : null;
   }
@@ -41,7 +48,11 @@ export class WalletRepository implements IWalletRepository {
       return null;
     }
 
-    const document = await WalletModel.findOne({ userId }).exec();
+    const query = WalletModel.findOne({ userId });
+    if (this.session) {
+      query.session(this.session);
+    }
+    const document = await query.exec();
 
     return document ? toWallet(document) : null;
   }
@@ -59,7 +70,10 @@ export class WalletRepository implements IWalletRepository {
     const document = await WalletModel.findOneAndUpdate(
       filter,
       { $inc: { balance: amount } },
-      { new: true },
+      {
+        new: true,
+        ...(this.session && { session: this.session }),
+      },
     ).exec();
 
     return document ? toWallet(document) : null;

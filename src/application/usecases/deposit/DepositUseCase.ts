@@ -12,6 +12,7 @@ import type { IAddFraudUseCase } from "../addFraud/IAddFraudUseCase.js";
 import type { IValidateFraudUseCase } from "../validateFraud/IValidateFraudUseCase.js";
 import type { IDepositUseCase } from "./IDepositUseCase.js";
 import type { DepositDto, DepositResponseDto } from "./DepositDto.js";
+import type { ITransactionManager } from "../../interfaces/ITransactionManager.js";
 
 @injectable()
 export class DepositUseCase implements IDepositUseCase {
@@ -26,6 +27,10 @@ export class DepositUseCase implements IDepositUseCase {
     private readonly addFraudUseCase: IAddFraudUseCase,
     @inject(DI_TOKENS.validateFraudUseCase)
     private readonly validateFraudUseCase: IValidateFraudUseCase,
+
+        @inject(DI_TOKENS.transactionManager)
+
+    private readonly transactionManager: ITransactionManager 
   ) {}
 
   async execute(dto: DepositDto): Promise<DepositResponseDto> {
@@ -114,16 +119,18 @@ export class DepositUseCase implements IDepositUseCase {
       throw new Error(MESSAGES.DEPOSIT_EXCEEDS_DAILY_LIMIT);
     }
 
-    // Step 9: Atomically update wallet balance (only reached if all validations pass)
-    const updatedWallet = await this.walletRepository.updateBalance(wallet.id, convertedAmount);
+    const { transactionId, idempotencyKey } = generateTransactionIdentifiers(dto.idempotencyKey);
+
+ /// calling  transaction  calss
+
+    const result = await this.transactionManager.execute(async(context)=>{
+
+    const updatedWallet = await context.wallets.updateBalance(wallet.id, convertedAmount);
     if (!updatedWallet) {
       throw new Error(MESSAGES.WALLET_NOT_FOUND);
     }
 
-    // Step 10: Record completed transaction
-    const { transactionId, idempotencyKey } = generateTransactionIdentifiers(dto.idempotencyKey);
-
-    const transaction = await this.transactionRepository.save({
+    const transaction = await context.transactions.save({
       transactionId,
       idempotencyKey,
       type: "deposit",
@@ -138,9 +145,20 @@ export class DepositUseCase implements IDepositUseCase {
       exchangeRate,
     });
 
-    return {
+       
+  return {
       transaction,
       wallet: updatedWallet,
     };
+
+
+    })
+
+    
+return{
+  transaction:result.transaction,
+  wallet:result.wallet
+}
+   
   }
 }

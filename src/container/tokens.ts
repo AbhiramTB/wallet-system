@@ -40,4 +40,8 @@ export const DI_TOKENS = {
   VALIDATE_FRAUD_USE_CASE: "IValidateFraudUseCase",
   GET_EXCHANGE_RATES_USE_CASE: "IGetExchangeRatesUseCase",
   UPDATE_EXCHANGE_RATES_USE_CASE: "IUpdateExchangeRatesUseCase",
+
+  transactionManager:"ITransactionManager"
+
+
 } as const;
