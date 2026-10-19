@@ -35,7 +35,7 @@ function toTransaction(doc: TransactionDocument): Transaction {
 
 @injectable()
 export class TransactionRepository implements ITransactionRepository {
-    constructor(private readonly session: ClientSession | undefined = undefined ) {}
+  constructor(private readonly session: ClientSession | undefined = undefined) {}
   
  async save(transaction: CreateTransactionInput): Promise<Transaction> {
   const document = new TransactionModel({
@@ -63,12 +63,20 @@ export class TransactionRepository implements ITransactionRepository {
 }
 
   async findByTransactionId(transactionId: string): Promise<Transaction | null> {
-    const document = await TransactionModel.findOne({ transactionId }).exec();
+    const query = TransactionModel.findOne({ transactionId });
+    if (this.session) {
+      query.session(this.session);
+    }
+    const document = await query.exec();
     return document ? toTransaction(document) : null;
   }
 
   async findByIdempotencyKey(key: string): Promise<Transaction | null> {
-    const document = await TransactionModel.findOne({ idempotencyKey: key }).exec();
+    const query = TransactionModel.findOne({ idempotencyKey: key });
+    if (this.session) {
+      query.session(this.session);
+    }
+    const document = await query.exec();
     return document ? toTransaction(document) : null;
   }
 

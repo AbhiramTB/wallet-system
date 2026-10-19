@@ -1,4 +1,4 @@
-import { isValidObjectId } from "mongoose";
+import { isValidObjectId, type ClientSession } from "mongoose";
 import { injectable } from "tsyringe";
 
 import type { CreateUserInput, User } from "../../../domain/entities/User.js";
@@ -17,8 +17,11 @@ function toUser(document: UserDocument): User {
 
 @injectable()
 export class UserRepository implements IUserRepository {
+  constructor(private readonly session: ClientSession | undefined = undefined) {}
+
   async save(user: CreateUserInput): Promise<User> {
-    const document = await UserModel.create(user);
+    const document = new UserModel(user);
+    await document.save(this.session ? { session: this.session } : undefined);
 
     return toUser(document);
   }
@@ -28,13 +31,21 @@ export class UserRepository implements IUserRepository {
       return null;
     }
 
-    const document = await UserModel.findById(id).exec();
+    const query = UserModel.findById(id);
+    if (this.session) {
+      query.session(this.session);
+    }
+    const document = await query.exec();
 
     return document ? toUser(document) : null;
   }
 
   async findByEmail(email: string): Promise<User | null> {
-    const document = await UserModel.findOne({ email: email.toLowerCase() }).exec();
+    const query = UserModel.findOne({ email: email.toLowerCase() });
+    if (this.session) {
+      query.session(this.session);
+    }
+    const document = await query.exec();
 
     return document ? toUser(document) : null;
   }
