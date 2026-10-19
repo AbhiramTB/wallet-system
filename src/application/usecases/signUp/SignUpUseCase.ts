@@ -4,9 +4,9 @@ import { DI_TOKENS } from "../../../container/tokens.js";
 import type { User } from "../../../domain/entities/User.js";
 import type { IUserRepository } from "../../../domain/repositories/IUserRepository.js";
 import type { IPasswordService } from "../../interfaces/IPasswordService.js";
+import type { ITransactionManager } from "../../interfaces/ITransactionManager.js";
 import type { ISignUpUseCase } from "./ISignUpUseCase.js";
 import type { SignUpDto } from "./SignUpDto.js";
-import type { ICreateWalletUseCase } from "../createWallet/ICreateWalletUseCase.js";
 import { MESSAGES } from "../../../constants/messages.js";
 
 @injectable()
@@ -16,8 +16,8 @@ export class SignUpUseCase implements ISignUpUseCase {
     private readonly userRepository: IUserRepository,
     @inject(DI_TOKENS.passwordService)
     private readonly passwordService: IPasswordService,
-    @inject(DI_TOKENS.createWalletUseCase)
-    private readonly createWalletUseCase: ICreateWalletUseCase,
+    @inject(DI_TOKENS.transactionManager)
+    private readonly transactionManager: ITransactionManager,
   ) {}
 
   async execute(dto: SignUpDto): Promise<User> {
@@ -30,17 +30,22 @@ export class SignUpUseCase implements ISignUpUseCase {
 
     const password = await this.passwordService.hash(dto.password);
 
-    const user = await this.userRepository.save({
-      username: dto.username.trim(),
-      email,
-      password,
-    });
+    return this.transactionManager.execute(async (context) => {
+      const user = await context.users.save({
+        username: dto.username.trim(),
+        email,
+        password,
+      });
 
-    await this.createWalletUseCase.execute({
-      userId: user.id,
-    });
+      await context.wallets.save({
+        userId: user.id,
+        balance: 0,
+        currency: "INR",
+        preferredCurrency: "USD",
+        status: "active",
+      });
 
-    return user;
+      return user;
+    });
   }
-  
 }
