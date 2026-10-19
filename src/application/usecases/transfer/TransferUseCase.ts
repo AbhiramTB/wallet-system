@@ -9,6 +9,7 @@ import type { IWalletRepository } from "../../../domain/repositories/IWalletRepo
 import type { ITransactionRepository } from "../../../domain/repositories/ITransactionRepository.js";
 import type { IGetExchangeRatesUseCase } from "../getExchangeRates/IGetExchangeRatesUseCase.js";
 import type { IValidateFraudUseCase } from "../validateFraud/IValidateFraudUseCase.js";
+import type { ITransactionManager } from "../../interfaces/ITransactionManager.js";
 import type { ITransferUseCase } from "./ITransferUseCase.js";
 import type { TransferDto, TransferResponseDto } from "./TransferDto.js";
 
@@ -23,6 +24,8 @@ export class TransferUseCase implements ITransferUseCase {
     private readonly getExchangeRatesUseCase: IGetExchangeRatesUseCase,
     @inject(DI_TOKENS.validateFraudUseCase)
     private readonly validateFraudUseCase: IValidateFraudUseCase,
+    @inject(DI_TOKENS.transactionManager)
+    private readonly transactionManager: ITransactionManager,
   ) {}
 
   async execute(dto: TransferDto): Promise<TransferResponseDto> {
@@ -144,40 +147,46 @@ export class TransferUseCase implements ITransferUseCase {
       recipientAmount = Number((convertedAmount * rate).toFixed(2));
     }
 
-    const updatedSenderWallet = await this.walletRepository.updateBalance(senderWallet.id, -convertedAmount);
-    if (!updatedSenderWallet) {
-      throw new Error(MESSAGES.INSUFFICIENT_FUNDS);
-    }
-
-    const updatedRecipientWallet = await this.walletRepository.updateBalance(recipientWallet.id, recipientAmount);
-    if (!updatedRecipientWallet) {
-
-      await this.walletRepository.updateBalance(senderWallet.id, convertedAmount);
-      throw new Error(MESSAGES.RECIPIENT_WALLET_NOT_FOUND);
-    }
-
     const { transactionId, idempotencyKey } = generateTransactionIdentifiers(dto.idempotencyKey);
 
-    const transaction = await this.transactionRepository.save({
-      transactionId,
-      idempotencyKey,
-      type: "transfer",
-      status: "completed",
-      fromWalletId: senderWallet.id,
-      toWalletId: recipientWallet.id,
-      amount: convertedAmount,
-      currency: senderBaseCurrency,
-      originalAmount: {
-        amount: dto.amount,
-        currency: transferCurrency,
-      },
-      exchangeRate,
-    });
+    return this.transactionManager.execute(async (context) => {
+      const updatedSenderWallet = await context.wallets.updateBalance(
+        senderWallet.id,
+        -convertedAmount,
+      );
+      if (!updatedSenderWallet) {
+        throw new Error(MESSAGES.INSUFFICIENT_FUNDS);
+      }
 
-    return {
-      transaction,
-      senderWallet: updatedSenderWallet,
-      recipientWallet: updatedRecipientWallet,
-    };
+      const updatedRecipientWallet = await context.wallets.updateBalance(
+        recipientWallet.id,
+        recipientAmount,
+      );
+      if (!updatedRecipientWallet) {
+        throw new Error(MESSAGES.RECIPIENT_WALLET_NOT_FOUND);
+      }
+
+      const transaction = await context.transactions.save({
+        transactionId,
+        idempotencyKey,
+        type: "transfer",
+        status: "completed",
+        fromWalletId: senderWallet.id,
+        toWalletId: recipientWallet.id,
+        amount: convertedAmount,
+        currency: senderBaseCurrency,
+        originalAmount: {
+          amount: dto.amount,
+          currency: transferCurrency,
+        },
+        exchangeRate,
+      });
+
+      return {
+        transaction,
+        senderWallet: updatedSenderWallet,
+        recipientWallet: updatedRecipientWallet,
+      };
+    });
   }
 }
