@@ -3,13 +3,13 @@ import { env } from "../../utils/env.js";
 
 export const redisConfig: RedisOptions = {
   host: env.REDIS_HOST || "127.0.0.1",
-  port: Number(env.REDIS_PORT) || 6379,
+  port: 6379,
   maxRetriesPerRequest: null,
 };
 
 export const bullMqConnection = {
   host: env.REDIS_HOST || "127.0.0.1",
-  port: Number(env.REDIS_PORT) || 6379,
+  port: 6379,
   maxRetriesPerRequest: null,
 };
 

@@ -31,8 +31,11 @@ export class GetExchangeRatesUseCase implements IGetExchangeRatesUseCase {
     const rates = await this.exchangeRateService.getRates(normalizedCurrency);
 
     try {
-      const ttl = env.CURRENCY_CACHE_TTL || 86400;
-      await this.cacheService.set(cacheKey, JSON.stringify(rates), ttl);
+      await this.cacheService.set(
+        cacheKey,
+        JSON.stringify(rates),
+        env.CURRENCY_CACHE_TTL,
+      );
     } catch {
     }
 
