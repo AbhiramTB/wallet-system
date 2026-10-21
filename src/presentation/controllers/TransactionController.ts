@@ -131,41 +131,15 @@ export class TransactionController {
     response.status(HttpStatus.CREATED).json(result);
   };
 
-  getHistory = async (request: Request, response: Response): Promise<void> => {
-    const authUserId = response.locals.userId as string | undefined;
+  getHistory = async (_request: Request, response: Response): Promise<void> => {
+    const userId = response.locals.userId as string | undefined;
 
-    const requestedUserId =
-      typeof request.params.userId === "string" && request.params.userId.trim() !== ""
-        ? request.params.userId.trim()
-        : typeof request.query.userId === "string" && request.query.userId.trim() !== ""
-          ? request.query.userId.trim()
-          : authUserId;
-
-    if (!requestedUserId) {
+    if (!userId) {
       throw new Error(MESSAGES.USER_NOT_FOUND);
     }
 
-    const page =
-      typeof request.query.page === "string" && !isNaN(Number(request.query.page))
-        ? parseInt(request.query.page, 10)
-        : undefined;
-
-    const limit =
-      typeof request.query.limit === "string" && !isNaN(Number(request.query.limit))
-        ? parseInt(request.query.limit, 10)
-        : undefined;
-
-    const type =
-      typeof request.query.type === "string" &&
-      ["deposit", "withdrawal", "transfer"].includes(request.query.type)
-        ? (request.query.type as "deposit" | "withdrawal" | "transfer")
-        : undefined;
-
     const result = await this.getTransactionHistoryUseCase.execute({
-      userId: requestedUserId,
-      page,
-      limit,
-      type,
+      userId,
     });
 
     response.status(HttpStatus.OK).json(result);

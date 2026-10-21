@@ -41,14 +41,15 @@ import { PasswordService } from "../infrastructure/services/PasswordService.js";
 import { RedisCacheService } from "../infrastructure/services/RedisCacheService.js";
 import { TokenService } from "../infrastructure/services/TokenService.js";
 import { DI_TOKENS } from "./tokens.js";
-import { MongoTransactionManager } from "../infrastructure/database/MongoTransactionManager.js";
+import { SequelizeTransactionManager } from "../infrastructure/database/SequelizeTransactionManager.js";
 import type { ITransactionManager } from "../application/interfaces/ITransactionManager.js";
 
 
-container.registerSingleton<ITransactionManager>(DI_TOKENS.transactionManager, MongoTransactionManager);
+container.registerSingleton<ITransactionManager>(DI_TOKENS.transactionManager, SequelizeTransactionManager);
 
 
 container.registerSingleton<IUserRepository>(DI_TOKENS.userRepository, UserRepository);
+
 container.registerSingleton<IWalletRepository>(DI_TOKENS.walletRepository, WalletRepository);
 container.registerSingleton<ITransactionRepository>(DI_TOKENS.transactionRepository, TransactionRepository);
 container.registerSingleton<IPasswordService>(DI_TOKENS.passwordService, PasswordService);

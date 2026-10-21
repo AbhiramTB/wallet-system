@@ -38,8 +38,10 @@
     "jsonwebtoken": "^9.0.3",
     "mongoose": "^9.11.2",
     "morgan": "^1.12.1",
+    "mysql2": "^3.24.6",
     "rate-limiter-flexible": "^11.2.2",
     "reflect-metadata": "^0.2.2",
+    "sequelize": "^6.37.8",
     "tsyringe": "^4.10.0"
   }
 }

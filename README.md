@@ -443,13 +443,9 @@ Base URL: `http://localhost:3000`
 ```
 
 #### View Transaction History
-- **`GET /api/transactions/history`** or **`GET /api/transactions/history/:userId`**
+- **`GET /api/transactions/history`**
 - **Requires:** `Authorization: Bearer <token>`
 - **Rate Limited:** Yes
-- **Query Parameters:**
-  - `page` *(optional, default: 1)*
-  - `limit` *(optional, default: 10)*
-  - `type` *(optional: `deposit` | `withdrawal` | `transfer`)*
 - **Response (`200 OK`):**
 ```json
 {

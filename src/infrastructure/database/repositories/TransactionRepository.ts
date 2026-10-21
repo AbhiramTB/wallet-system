@@ -1,204 +1,225 @@
-import mongoose, { type ClientSession } from "mongoose";
+
 import { injectable } from "tsyringe";
+import { Op } from "sequelize";
+import type { Transaction as SequelizeTransaction } from "sequelize";
 
 import type {
   CreateTransactionInput,
   Transaction,
 } from "../../../domain/entities/Transaction.js";
-import type { ITransactionRepository } from "../../../domain/repositories/ITransactionRepository.js";
-import {
-  TransactionModel,
-  type TransactionDocument,
-} from "../models/TransactionModel.js";
 
-function toTransaction(doc: TransactionDocument): Transaction {
+import type { ITransactionRepository } from "../../../domain/repositories/ITransactionRepository.js";
+import { TransactionModel } from "../models/TransactionModel.js";
+
+function toTransaction(doc: TransactionModel): Transaction {
   return {
     transactionId: doc.transactionId,
     idempotencyKey: doc.idempotencyKey,
     type: doc.type,
     status: doc.status,
-    fromWalletId: doc.fromWalletId ? doc.fromWalletId.toString() : undefined,
-    toWalletId: doc.toWalletId ? doc.toWalletId.toString() : undefined,
-    amount: doc.amount,
+
+    fromWalletId:
+      doc.fromWalletId != null ? String(doc.fromWalletId) : undefined,
+
+    toWalletId:
+      doc.toWalletId != null ? String(doc.toWalletId) : undefined,
+
+    amount: Number(doc.amount),
     currency: doc.currency,
+
     originalAmount: doc.originalAmount
       ? {
-          amount: doc.originalAmount.amount,
+          amount: Number(doc.originalAmount.amount),
           currency: doc.originalAmount.currency,
         }
       : undefined,
-    exchangeRate: doc.exchangeRate ?? undefined,
+
+    exchangeRate:
+      doc.exchangeRate != null
+        ? Number(doc.exchangeRate)
+        : undefined,
+
     createdAt: doc.createdAt,
     updatedAt: doc.updatedAt,
   };
 }
 
 @injectable()
-export class TransactionRepository implements ITransactionRepository {
-  constructor(private readonly session: ClientSession | undefined = undefined) {}
-  
- async save(transaction: CreateTransactionInput): Promise<Transaction> {
-  const document = new TransactionModel({
-    transactionId: transaction.transactionId,
-    idempotencyKey: transaction.idempotencyKey,
-    type: transaction.type,
-    status: transaction.status ?? "pending",
-    fromWalletId: transaction.fromWalletId
-      ? new mongoose.Types.ObjectId(transaction.fromWalletId)
-      : null,
-    toWalletId: transaction.toWalletId
-      ? new mongoose.Types.ObjectId(transaction.toWalletId)
-      : null,
-    amount: transaction.amount,
-    currency: transaction.currency,
-    originalAmount: transaction.originalAmount ?? null,
-    exchangeRate: transaction.exchangeRate ?? null,
-  });
+export class TransactionRepository
+  implements ITransactionRepository
+{
+  constructor(
+    private readonly session: SequelizeTransaction | null = null
+  ) {}
 
-  await document.save(
-    this.session ? { session: this.session } : undefined,
-  );
+  async save(
+    transaction: CreateTransactionInput,
+  ): Promise<Transaction> {
+    const document = await TransactionModel.create(
+      {
+        transactionId: transaction.transactionId,
+        idempotencyKey: transaction.idempotencyKey,
+        type: transaction.type,
+        status: transaction.status ?? "pending",
 
-  return toTransaction(document);
-}
+        fromWalletId: transaction.fromWalletId
+          ? Number(transaction.fromWalletId)
+          : null,
 
-  async findByTransactionId(transactionId: string): Promise<Transaction | null> {
-    const query = TransactionModel.findOne({ transactionId });
-    if (this.session) {
-      query.session(this.session);
-    }
-    const document = await query.exec();
+        toWalletId: transaction.toWalletId
+          ? Number(transaction.toWalletId)
+          : null,
+
+        amount: transaction.amount,
+        currency: transaction.currency,
+        originalAmount: transaction.originalAmount ?? null,
+        exchangeRate: transaction.exchangeRate ?? null,
+      },
+      {
+        ...(this.session && { transaction: this.session }),
+      },
+    );
+
+    return toTransaction(document);
+  }
+
+  async findByTransactionId(
+    id: string,
+  ): Promise<Transaction | null> {
+    const document = await TransactionModel.findOne({
+      where: { transactionId: id },
+      ...(this.session && { transaction: this.session }),
+    });
+
     return document ? toTransaction(document) : null;
   }
 
-  async findByIdempotencyKey(key: string): Promise<Transaction | null> {
-    const query = TransactionModel.findOne({ idempotencyKey: key });
-    if (this.session) {
-      query.session(this.session);
-    }
-    const document = await query.exec();
+  async findByIdempotencyKey(
+    key: string,
+  ): Promise<Transaction | null> {
+    const document = await TransactionModel.findOne({
+      where: { idempotencyKey: key },
+      ...(this.session && { transaction: this.session }),
+    });
+
     return document ? toTransaction(document) : null;
   }
 
-  async getTodayDepositsTotal(walletId: string, startOfDay: Date): Promise<number> {
-    if (!mongoose.isValidObjectId(walletId)) {
-      return 0;
-    }
-
-    const result = await TransactionModel.aggregate<{ total: number }>([
-      {
-        $match: {
-          toWalletId: new mongoose.Types.ObjectId(walletId),
-          type: "deposit",
-          status: "completed",
-          createdAt: { $gte: startOfDay },
-        },
-      },
-      {
-        $group: {
-          _id: null,
-          total: { $sum: "$amount" },
-        },
-      },
-    ]);
-
-    return result[0]?.total ?? 0;
-  }
-
-  async getTodayWithdrawalsTotal(walletId: string, startOfDay: Date): Promise<number> {
-    if (!mongoose.isValidObjectId(walletId)) {
-      return 0;
-    }
-
-    const result = await TransactionModel.aggregate<{ total: number }>([
-      {
-        $match: {
-          fromWalletId: new mongoose.Types.ObjectId(walletId),
-          type: "withdrawal",
-          status: "completed",
-          createdAt: { $gte: startOfDay },
-        },
-      },
-      {
-        $group: {
-          _id: null,
-          total: { $sum: "$amount" },
-        },
-      },
-    ]);
-
-    return result[0]?.total ?? 0;
-  }
-
-  async getTodayTransfersTotal(walletId: string, startOfDay: Date): Promise<number> {
-    if (!mongoose.isValidObjectId(walletId)) {
-      return 0;
-    }
-
-    const result = await TransactionModel.aggregate<{ total: number }>([
-      {
-        $match: {
-          fromWalletId: new mongoose.Types.ObjectId(walletId),
-          type: "transfer",
-          status: "completed",
-          createdAt: { $gte: startOfDay },
-        },
-      },
-      {
-        $group: {
-          _id: null,
-          total: { $sum: "$amount" },
-        },
-      },
-    ]);
-
-    return result[0]?.total ?? 0;
-  }
-
-  async getTodayTransactionCount(walletId: string, startOfDay: Date): Promise<number> {
-    if (!mongoose.isValidObjectId(walletId)) {
-      return 0;
-    }
-
-    const objId = new mongoose.Types.ObjectId(walletId);
-    return TransactionModel.countDocuments({
-      $or: [{ fromWalletId: objId }, { toWalletId: objId }],
-      createdAt: { $gte: startOfDay },
-    }).exec();
-  }
-
-  async findByWalletId(
+  async getTodayDepositsTotal(
     walletId: string,
-    options?: { limit?: number | undefined; skip?: number | undefined },
-  ): Promise<Transaction[]> {
-    if (!mongoose.isValidObjectId(walletId)) {
-      return [];
-    }
+    startOfDay: Date,
+  ): Promise<number> {
+    const id = Number(walletId);
 
-    const objId = new mongoose.Types.ObjectId(walletId);
-    let query = TransactionModel.find({
-      $or: [{ fromWalletId: objId }, { toWalletId: objId }],
-    }).sort({ createdAt: -1 });
+    if (!Number.isSafeInteger(id) || id <= 0) return 0;
 
-    if (options?.skip !== undefined && options.skip > 0) {
-      query = query.skip(options.skip);
-    }
-    if (options?.limit !== undefined && options.limit > 0) {
-      query = query.limit(options.limit);
-    }
+    const total = await TransactionModel.sum("amount", {
+      where: {
+        toWalletId: id,
+        type: "deposit",
+        status: "completed",
+        createdAt: { [Op.gte]: startOfDay },
+      },
+      ...(this.session && { transaction: this.session }),
+    });
 
-    const documents = await query.exec();
+    return Number(total ?? 0);
+  }
+
+  async getTodayWithdrawalsTotal(
+    walletId: string,
+    startOfDay: Date,
+  ): Promise<number> {
+    const id = Number(walletId);
+
+    if (!Number.isSafeInteger(id) || id <= 0) return 0;
+
+    const total = await TransactionModel.sum("amount", {
+      where: {
+        fromWalletId: id,
+        type: "withdrawal",
+        status: "completed",
+        createdAt: { [Op.gte]: startOfDay },
+      },
+      ...(this.session && { transaction: this.session }),
+    });
+
+    return Number(total ?? 0);
+  }
+
+  async getTodayTransfersTotal(
+    walletId: string,
+    startOfDay: Date,
+  ): Promise<number> {
+    const id = Number(walletId);
+
+    if (!Number.isSafeInteger(id) || id <= 0) return 0;
+
+    const total = await TransactionModel.sum("amount", {
+      where: {
+        fromWalletId: id,
+        type: "transfer",
+        status: "completed",
+        createdAt: { [Op.gte]: startOfDay },
+      },
+      ...(this.session && { transaction: this.session }),
+    });
+
+    return Number(total ?? 0);
+  }
+
+  async getTodayTransactionCount(
+    walletId: string,
+    startOfDay: Date,
+  ): Promise<number> {
+    const id = Number(walletId);
+
+    if (!Number.isSafeInteger(id) || id <= 0) return 0;
+
+    return TransactionModel.count({
+      where: {
+        [Op.or]: [
+          { fromWalletId: id },
+          { toWalletId: id },
+        ],
+        createdAt: { [Op.gte]: startOfDay },
+      },
+      ...(this.session && { transaction: this.session }),
+    });
+  }
+
+  async findByWalletId(walletId: string): Promise<Transaction[]> {
+    const id = Number(walletId);
+
+    if (!Number.isSafeInteger(id) || id <= 0) return [];
+
+    const documents = await TransactionModel.findAll({
+      where: {
+        [Op.or]: [
+          { fromWalletId: id },
+          { toWalletId: id },
+        ],
+      },
+      order: [["createdAt", "DESC"]],
+      ...(this.session && { transaction: this.session }),
+    });
+
     return documents.map(toTransaction);
   }
 
   async countByWalletId(walletId: string): Promise<number> {
-    if (!mongoose.isValidObjectId(walletId)) {
-      return 0;
-    }
+    const id = Number(walletId);
 
-    const objId = new mongoose.Types.ObjectId(walletId);
-    return TransactionModel.countDocuments({
-      $or: [{ fromWalletId: objId }, { toWalletId: objId }],
-    }).exec();
+    if (!Number.isSafeInteger(id) || id <= 0) return 0;
+
+    return TransactionModel.count({
+      where: {
+        [Op.or]: [
+          { fromWalletId: id },
+          { toWalletId: id },
+        ],
+      },
+      ...(this.session && { transaction: this.session }),
+    });
   }
 }

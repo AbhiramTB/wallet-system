@@ -1,15 +1,21 @@
-import { isValidObjectId, type ClientSession } from "mongoose";
+
 import { injectable } from "tsyringe";
+import { literal, Op } from "sequelize";
+import type { Transaction } from "sequelize";
 
-import type { CreateWalletInput, Wallet } from "../../../domain/entities/Wallet.js";
+import type {
+  CreateWalletInput,
+  Wallet,
+} from "../../../domain/entities/Wallet.js";
+
 import type { IWalletRepository } from "../../../domain/repositories/IWalletRepository.js";
-import { WalletModel, type WalletDocument } from "../models/WalletModel.js";
+import { WalletModel } from "../models/WalletModel.js";
 
-function toWallet(document: WalletDocument): Wallet {
+function toWallet(document: WalletModel): Wallet {
   return {
-    id: document._id.toString(),
+    id: document.id.toString(),
     userId: document.userId.toString(),
-    balance: document.balance,
+    balance: Number(document.balance),
     currency: document.currency,
     preferredCurrency: document.preferredCurrency,
     status: document.status,
@@ -20,61 +26,95 @@ function toWallet(document: WalletDocument): Wallet {
 
 @injectable()
 export class WalletRepository implements IWalletRepository {
-  constructor(private readonly session: ClientSession | undefined = undefined) {}
+  constructor(
+    private readonly session: Transaction | null  = null,
+  ) {}
 
   async save(wallet: CreateWalletInput): Promise<Wallet> {
-    const document = new WalletModel(wallet);
-    await document.save(this.session ? { session: this.session } : undefined);
+    const document = await WalletModel.create(
+      {
+        balance: wallet.balance ?? 0,
+        currency: wallet.currency ?? "INR",
+        preferredCurrency: wallet.preferredCurrency ?? "INR",
+        status: wallet.status ?? "active",
+        userId: Number(wallet.userId),
+      },
+      {
+        ...(this.session && { transaction: this.session }),
+      },
+    );
 
     return toWallet(document);
   }
 
   async findById(id: string): Promise<Wallet | null> {
-    if (!isValidObjectId(id)) {
+    const walletId = Number(id);
+
+    if (!Number.isSafeInteger(walletId) || walletId <= 0) {
       return null;
     }
 
-    const query = WalletModel.findById(id);
-    if (this.session) {
-      query.session(this.session);
-    }
-    const document = await query.exec();
+    const document = await WalletModel.findByPk(walletId, {
+      ...(this.session && { transaction: this.session }),
+    });
 
     return document ? toWallet(document) : null;
   }
 
-  async findByUserId(userId: string): Promise<Wallet | null> {
-    if (!isValidObjectId(userId)) {
+  async findByUserId(id: string): Promise<Wallet | null> {
+    const userId = Number(id);
+
+    if (!Number.isSafeInteger(userId) || userId <= 0) {
       return null;
     }
 
-    const query = WalletModel.findOne({ userId });
-    if (this.session) {
-      query.session(this.session);
-    }
-    const document = await query.exec();
+    const document = await WalletModel.findOne({
+      where: { userId },
+      ...(this.session && { transaction: this.session }),
+    });
 
     return document ? toWallet(document) : null;
   }
 
-  async updateBalance(walletId: string, amount: number): Promise<Wallet | null> {
-    if (!isValidObjectId(walletId)) {
+  async updateBalance(
+    walletId: string,
+    amount: number,
+  ): Promise<Wallet | null> {
+    const id = Number(walletId);
+
+    if (
+      !Number.isSafeInteger(id) ||
+      id <= 0 ||
+      !Number.isFinite(amount)
+    ) {
       return null;
     }
 
-    const filter: Record<string, unknown> = { _id: walletId };
+    const where: Record<string, unknown> = { id };
+
     if (amount < 0) {
-      filter.balance = { $gte: Math.abs(amount) };
+      where.balance = {
+        [Op.gte]: Math.abs(amount),
+      };
     }
 
-    const document = await WalletModel.findOneAndUpdate(
-      filter,
-      { $inc: { balance: amount } },
+    const [affectedCount] = await WalletModel.update(
       {
-        new: true,
-        ...(this.session && { session: this.session }),
+        balance: literal(`balance + (${amount})`),
       },
-    ).exec();
+      {
+        where,
+        ...(this.session && { transaction: this.session }),
+      },
+    );
+
+    if (affectedCount === 0) {
+      return null;
+    }
+
+    const document = await WalletModel.findByPk(id, {
+      ...(this.session && { transaction: this.session }),
+    });
 
     return document ? toWallet(document) : null;
   }

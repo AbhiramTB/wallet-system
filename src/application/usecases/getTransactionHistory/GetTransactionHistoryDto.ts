@@ -8,9 +8,6 @@ export type TransactionDirection = "credit" | "debit";
 
 export interface GetTransactionHistoryDto {
   userId: string;
-  page?: number | undefined;
-  limit?: number | undefined;
-  type?: TransactionType | undefined;
 }
 
 export interface FormattedTransactionHistoryItem {
@@ -34,7 +31,5 @@ export interface TransactionHistoryResponseDto {
   balance: number;
   currency: string;
   totalTransactions: number;
-  page?: number | undefined;
-  limit?: number | undefined;
   transactions: FormattedTransactionHistoryItem[];
 }

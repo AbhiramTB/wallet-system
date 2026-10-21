@@ -31,6 +31,7 @@ export class SignUpUseCase implements ISignUpUseCase {
     const password = await this.passwordService.hash(dto.password);
 
     return this.transactionManager.execute(async (context) => {
+      
       const user = await context.users.save({
         username: dto.username.trim(),
         email,
