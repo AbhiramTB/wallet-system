@@ -188,10 +188,7 @@ export class TransactionRepository
     });
   }
 
-  async findByWalletId(
-    walletId: string,
-    options?: { limit?: number; skip?: number },
-  ): Promise<Transaction[]> {
+  async findByWalletId(walletId: string): Promise<Transaction[]> {
     const id = Number(walletId);
 
     if (!Number.isSafeInteger(id) || id <= 0) return [];
@@ -204,12 +201,6 @@ export class TransactionRepository
         ],
       },
       order: [["createdAt", "DESC"]],
-      ...(options?.skip !== undefined && options.skip > 0
-        ? { offset: options.skip }
-        : {}),
-      ...(options?.limit !== undefined && options.limit > 0
-        ? { limit: options.limit }
-        : {}),
       ...(this.session && { transaction: this.session }),
     });
 

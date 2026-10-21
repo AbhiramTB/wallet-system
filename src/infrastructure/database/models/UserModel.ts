@@ -10,6 +10,7 @@ import {
 import { sequelize } from "../../config/db.js";
 
 export interface UserPersistence {
+  id: number;
   username: string;
   email: string;
   password: string;
@@ -20,7 +21,7 @@ export interface UserPersistence {
 class UserModel extends Model< InferAttributes<UserModel>,InferCreationAttributes<UserModel> > {
 
   declare id: CreationOptional<number>;
-  declare userName: string;
+  declare username: string;
   declare email: string;
   declare password: string;
   declare createdAt: CreationOptional<Date>;
@@ -37,7 +38,7 @@ UserModel.init(
       autoIncrement: true,
       primaryKey: true,
     },
-    userName: {
+    username: {
       type: DataTypes.STRING(20),
       allowNull: false,
       validate: {
