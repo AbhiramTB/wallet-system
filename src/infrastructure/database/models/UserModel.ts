@@ -1,4 +1,13 @@
-import mongoose, { type HydratedDocument, type Model } from "mongoose";
+
+import {
+  DataTypes,
+  Model,
+  type InferAttributes,
+  type InferCreationAttributes,
+  type CreationOptional,
+} from "sequelize";
+
+import { sequelize } from "../../config/db.js";
 
 export interface UserPersistence {
   username: string;
@@ -8,34 +17,60 @@ export interface UserPersistence {
   updatedAt: Date;
 }
 
-export type UserDocument = HydratedDocument<UserPersistence>;
+class UserModel extends Model< InferAttributes<UserModel>,InferCreationAttributes<UserModel> > {
 
-const userSchema = new mongoose.Schema<UserPersistence>(
+  declare id: CreationOptional<number>;
+  declare userName: string;
+  declare email: string;
+  declare password: string;
+  declare createdAt: CreationOptional<Date>;
+  declare updatedAt: CreationOptional<Date>;
+}
+
+
+
+
+UserModel.init(
   {
-    username: {
-      type: String,
-      required: true,
-      trim: true,
-      minlength: 3,
-      maxlength: 50,
+    id: {
+      type: DataTypes.INTEGER,
+      autoIncrement: true,
+      primaryKey: true,
+    },
+    userName: {
+      type: DataTypes.STRING(20),
+      allowNull: false,
+      validate: {
+        notEmpty: true,
+        len: [3, 20],
+      },
     },
     email: {
-      type: String,
-      required: true,
+      type: DataTypes.STRING(255),
+      allowNull: false,
       unique: true,
-      lowercase: true,
-      trim: true,
+      validate: {
+        isEmail: true,
+      },
     },
     password: {
-      type: String,
-      required: true,
-      minlength: 8,
+      type: DataTypes.STRING(255),
+      allowNull: false,
+    },
+    createdAt: {
+      type: DataTypes.DATE,
+      allowNull: false,
+    },
+    updatedAt: {
+      type: DataTypes.DATE,
+      allowNull: false,
     },
   },
-  { timestamps: true },
+  {
+    sequelize,
+    tableName: "users",
+    timestamps: true,
+  }
 );
 
-const existingUserModel = mongoose.models.User as Model<UserPersistence> | undefined;
-
-export const UserModel: Model<UserPersistence> =
-  existingUserModel ?? mongoose.model<UserPersistence>("User", userSchema);
+export { UserModel };
