@@ -1,14 +1,16 @@
+
 import { injectable } from "tsyringe";
+import type { Transaction } from "sequelize";
 
-import type { CreateUserInput, User } from "../../../domain/entities/User.js";
+import type {
+  CreateUserInput,
+  User,
+} from "../../../domain/entities/User.js";
+
 import type { IUserRepository } from "../../../domain/repositories/IUserRepository.js";
+import { UserModel } from "../models/UserModel.js";
 
-import { UserModel, type UserPersistence } from "../models/UserModel.js";      
-import { Transaction } from "sequelize";
-
-
-
-function toUser(document:UserPersistence ): User {
+function toUser(document: UserModel): User {
   return {
     id: document.id.toString(),
     username: document.username,
@@ -19,49 +21,46 @@ function toUser(document:UserPersistence ): User {
 }
 
 @injectable()
-
 export class UserRepository implements IUserRepository {
-  constructor(private readonly session: Transaction ) {}
+  constructor(
+ private readonly session: Transaction | null  = null,
+  ) {}
 
-  
-  async save(user:CreateUserInput):Promise<User>{
-   const newuser=await UserModel.create({
-      email:user.email,
-      password:user.password,
-      username:user.username
-    },{
-    transaction: this.session
-    })
-   
-    return toUser(newuser)
+  async save(user: CreateUserInput): Promise<User> {
+    const newUser = await UserModel.create(
+      {
+        email: user.email,
+        password: user.password,
+        username: user.username,
+      },
+      {
+        ...(this.session && { transaction: this.session }),
+      },
+    );
+
+    return toUser(newUser);
   }
-
 
   async findById(id: string): Promise<User | null> {
-    const userId = Number(id)
+    const userId = Number(id);
 
-    const user = await  UserModel.findByPk(userId,{
-      transaction:this.session
+    if (!Number.isSafeInteger(userId) || userId <= 0) {
+      return null;
+    }
+
+    const user = await UserModel.findByPk(userId, {
+      ...(this.session && { transaction: this.session }),
     });
-     
-     
-    
 
-    return  user?toUser(user):null
+    return user ? toUser(user) : null;
   }
-
-
 
   async findByEmail(email: string): Promise<User | null> {
-     const user  =await UserModel.findOne({ 
-   where:{
-    email
-   },
-   transaction:this.session
+    const user = await UserModel.findOne({
+      where: { email },
+      ...(this.session && { transaction: this.session }),
+    });
 
-     })
-     return user ? toUser(user):null;
+    return user ? toUser(user) : null;
   }
-
-
 }
