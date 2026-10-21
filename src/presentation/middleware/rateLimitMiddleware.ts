@@ -8,7 +8,11 @@ export const rateLimitMiddleware = async (
   next: NextFunction,
 ): Promise<void> => {
   try {
-    const userId =   res.locals.userId
+    const userId =  req.ip ;
+    console.log('-----------------ip ip')
+    console.log(req.ip)
+      
+
     if (!userId) {
       res.status(401).json({
         message: "Authentication required",
@@ -17,6 +21,7 @@ export const rateLimitMiddleware = async (
     }
 
     await userPerMinuteLimiter.consume(userId);
+    
     await userPerHourLimiter.consume(userId);
 
     next();

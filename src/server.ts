@@ -12,7 +12,8 @@ const port = env.PORT || 3000;
 
 const startServer = async (): Promise<void> => {
   try {
-    await dbConnect();
+    
+   await dbConnect();
 
     await scheduleExchangeRateUpdates();
 

@@ -8,6 +8,7 @@ export class ExchangeRateService implements IExchangeRateService {
   async getRates(
     baseCurrency: string,
   ): Promise<Record<string, number>> {
+    
     const response = await fetch(
       `${env.EXCHANGE_RATE_API_URL}/${baseCurrency.toUpperCase()}`,
     );

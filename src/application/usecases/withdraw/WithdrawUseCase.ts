@@ -13,6 +13,7 @@ import type { ITransactionManager } from "../../interfaces/ITransactionManager.j
 import type { IWithdrawUseCase } from "./IWithdrawUseCase.js";
 import type { WithdrawDto, WithdrawResponseDto } from "./WithdrawDto.js";
 
+
 @injectable()
 export class WithdrawUseCase implements IWithdrawUseCase {
   constructor(
@@ -57,6 +58,7 @@ export class WithdrawUseCase implements IWithdrawUseCase {
 
     // Step 1: Fetch user wallet
     const wallet = await this.walletRepository.findByUserId(dto.userId);
+
     if (!wallet) {
       throw new Error(MESSAGES.WALLET_NOT_FOUND);
     }
@@ -115,12 +117,14 @@ export class WithdrawUseCase implements IWithdrawUseCase {
     const { transactionId, idempotencyKey } = generateTransactionIdentifiers(dto.idempotencyKey);
 
     return this.transactionManager.execute(async (context) => {
+      
       const updatedWallet = await context.wallets.updateBalance(wallet.id, -convertedAmount);
       if (!updatedWallet) {
         throw new Error(MESSAGES.INSUFFICIENT_FUNDS);
       }
 
       const transaction = await context.transactions.save({
+
         transactionId,
         idempotencyKey,
         type: "withdrawal",
