@@ -1,4 +1,11 @@
-import mongoose, { type HydratedDocument, type Model, Schema } from "mongoose";
+
+import {
+  DataTypes,
+  Model,
+  type CreationOptional,
+  type InferAttributes,
+  type InferCreationAttributes,
+} from "sequelize";
 
 import type {
   Money,
@@ -6,111 +13,146 @@ import type {
   TransactionType,
 } from "../../../domain/entities/Transaction.js";
 
+import { WalletModel } from "./WalletModel.js";
+import { sequelize } from "../../config/db.js";
+
 export interface TransactionPersistence {
+  id: number;
   transactionId: string;
   idempotencyKey: string;
   type: TransactionType;
   status: TransactionStatus;
-  fromWalletId?: mongoose.Types.ObjectId | null;
-  toWalletId?: mongoose.Types.ObjectId | null;
+  fromWalletId: number | null;
+  toWalletId: number | null;
   amount: number;
   currency: string;
-  originalAmount?: Money | null;
-  exchangeRate?: number | null;
+  originalAmount: Money | null;
+  exchangeRate: number | null;
   createdAt: Date;
   updatedAt: Date;
 }
 
-export type TransactionDocument = HydratedDocument<TransactionPersistence>;
+class TransactionModel extends Model<
+  InferAttributes<TransactionModel>,
+  InferCreationAttributes<TransactionModel>
+> {
+  declare id: CreationOptional<number>;
+  declare transactionId: string;
+  declare idempotencyKey: string;
+  declare type: TransactionType;
+  declare status: CreationOptional<TransactionStatus>;
+  declare fromWalletId: number | null;
+  declare toWalletId: number | null;
+  declare amount: number;
+  declare currency: string;
+  declare originalAmount: Money | null;
+  declare exchangeRate: number | null;
+  declare createdAt: CreationOptional<Date>;
+  declare updatedAt: CreationOptional<Date>;
+}
 
-const moneySchema = new Schema<Money>(
+TransactionModel.init(
   {
-    amount: {
-      type: Number,
-      required: true,
-      min: 0,
+    id: {
+      type: DataTypes.INTEGER,
+      primaryKey: true,
+      autoIncrement: true,
     },
-    currency: {
-      type: String,
-      required: true,
-      uppercase: true,
-      trim: true,
-    },
-  },
-  { _id: false },
-);
 
-const transactionSchema = new Schema<TransactionPersistence>(
-  {
     transactionId: {
-      type: String,
-      required: true,
+      type: DataTypes.STRING(100),
+      allowNull: false,
       unique: true,
-      index: true,
-      trim: true,
     },
+
     idempotencyKey: {
-      type: String,
-      required: true,
+      type: DataTypes.STRING(255),
+      allowNull: false,
       unique: true,
-      index: true,
-      trim: true,
     },
+
     type: {
-      type: String,
-      required: true,
-      enum: ["deposit", "withdrawal", "transfer"],
-      trim: true,
-      lowercase: true,
+      type: DataTypes.ENUM("deposit", "withdrawal", "transfer"),
+      allowNull: false,
     },
+
     status: {
-      type: String,
-      required: true,
-      enum: ["pending", "completed", "failed", "cancelled"],
-      default: "pending",
-      trim: true,
-      lowercase: true,
+      type: DataTypes.ENUM(
+        "pending",
+        "completed",
+        "failed",
+        "cancelled",
+      ),
+      allowNull: false,
+      defaultValue: "pending",
     },
+
     fromWalletId: {
-      type: Schema.Types.ObjectId,
-      ref: "Wallet",
-      default: null,
-      index: true,
+      type: DataTypes.INTEGER,
+      allowNull: true,
+      defaultValue: null,
+      references: {
+        model: WalletModel,
+        key: "id",
+      },
     },
+
     toWalletId: {
-      type: Schema.Types.ObjectId,
-      ref: "Wallet",
-      default: null,
-      index: true,
+      type: DataTypes.INTEGER,
+      allowNull: true,
+      defaultValue: null,
+      references: {
+        model: WalletModel,
+        key: "id",
+      },
     },
+
     amount: {
-      type: Number,
-      required: true,
-      min: 0,
+      type: DataTypes.DECIMAL(15, 2),
+      allowNull: false,
+      validate: {
+        min: 0,
+      },
     },
+
     currency: {
-      type: String,
-      required: true,
-      uppercase: true,
-      trim: true,
+      type: DataTypes.STRING(10),
+      allowNull: false,
+      set(value: string) {
+        this.setDataValue("currency", value.trim().toUpperCase());
+      },
     },
+
     originalAmount: {
-      type: moneySchema,
-      default: null,
+      type: DataTypes.JSON,
+      allowNull: true,
+      defaultValue: null,
     },
+
     exchangeRate: {
-      type: Number,
-      default: null,
-      min: 0,
+      type: DataTypes.DECIMAL(15, 8),
+      allowNull: true,
+      defaultValue: null,
+      validate: {
+        min: 0,
+      },
+    },
+
+    createdAt: {
+      type: DataTypes.DATE,
+      allowNull: false,
+    },
+
+    updatedAt: {
+      type: DataTypes.DATE,
+      allowNull: false,
     },
   },
-  { timestamps: true },
+  {
+    sequelize,
+    tableName: "Transactions",
+    timestamps: true,
+  },
 );
 
-const existingTransactionModel = mongoose.models.Transaction as
-  | Model<TransactionPersistence>
-  | undefined;
-
-export const TransactionModel: Model<TransactionPersistence> =
-  existingTransactionModel ??
-  mongoose.model<TransactionPersistence>("Transaction", transactionSchema);
+export { TransactionModel };
