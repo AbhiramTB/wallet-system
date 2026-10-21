@@ -8,9 +8,6 @@ export interface ITransactionRepository {
   getTodayWithdrawalsTotal(walletId: string, startOfDay: Date): Promise<number>;
   getTodayTransfersTotal(walletId: string, startOfDay: Date): Promise<number>;
   getTodayTransactionCount(walletId: string, startOfDay: Date): Promise<number>;
-  findByWalletId(
-    walletId: string,
-    options?: { limit?: number | undefined; skip?: number | undefined },
-  ): Promise<Transaction[]>;
+  findByWalletId(walletId: string): Promise<Transaction[]>;
   countByWalletId(walletId: string): Promise<number>;
 }

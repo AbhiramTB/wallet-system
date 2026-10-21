@@ -19,7 +19,7 @@ export const sequelize = new Sequelize(
 async function dbConnect(): Promise<Sequelize> {
   try {
     await sequelize.authenticate();
-
+    await sequelize.sync();
     console.log("MySQL database connected successfully");
 
     return sequelize;

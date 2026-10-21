@@ -12,6 +12,5 @@ transactionRouter.post("/deposit", authMiddleware,rateLimitMiddleware, transacti
 transactionRouter.post("/withdraw", authMiddleware,rateLimitMiddleware, transactionController.withdraw);
 transactionRouter.post("/transfer", authMiddleware, rateLimitMiddleware, transactionController.transfer);
 transactionRouter.get("/history", authMiddleware, rateLimitMiddleware, transactionController.getHistory);
-transactionRouter.get("/history/:userId", authMiddleware, rateLimitMiddleware, transactionController.getHistory);
 
 export default transactionRouter;

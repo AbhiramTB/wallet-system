@@ -34,22 +34,11 @@ export class GetTransactionHistoryUseCase implements IGetTransactionHistoryUseCa
       throw new Error(MESSAGES.WALLET_NOT_FOUND);
     }
 
-    const page = dto.page && dto.page > 0 ? dto.page : 1;
-    const limit = dto.limit && dto.limit > 0 ? dto.limit : undefined;
-    const skip = limit !== undefined ? (page - 1) * limit : undefined;
-
-    const rawTransactions = await this.transactionRepository.findByWalletId(wallet.id, {
-      limit,
-      skip,
-    });
+    const rawTransactions = await this.transactionRepository.findByWalletId(wallet.id);
 
     const totalTransactions = await this.transactionRepository.countByWalletId(wallet.id);
 
-    const filteredTransactions = dto.type
-      ? rawTransactions.filter((tx) => tx.type === dto.type)
-      : rawTransactions;
-
-    const formattedTransactions: FormattedTransactionHistoryItem[] = filteredTransactions.map(
+    const formattedTransactions: FormattedTransactionHistoryItem[] = rawTransactions.map(
       (tx: Transaction) => {
         let direction: TransactionDirection;
 
@@ -90,8 +79,6 @@ export class GetTransactionHistoryUseCase implements IGetTransactionHistoryUseCa
       balance: wallet.balance,
       currency: wallet.currency,
       totalTransactions,
-      page: limit ? page : undefined,
-      limit: limit ? limit : undefined,
       transactions: formattedTransactions,
     };
   }
